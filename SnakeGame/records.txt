@@ -1,0 +1,9 @@
+Alice 9
+Dave 8
+Bob 3
+Carol 5
+vasya2 6
+vasya 8
+vasya3 14
+Player 7
+ 2

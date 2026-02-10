@@ -8,7 +8,9 @@
 #include <string>
 #include <fstream>
 #include <iostream> 
+#include <vector> 
 #include "Math.h"
+#include "Block.h"
 
 const std::string SAVE_FILE = "records.txt";
 
@@ -32,79 +34,123 @@ enum class GameState
     Options,
     Diffcult,
     Cin,
+    Win
 };
 
 class Game
 {
 public:
-
     Game();
     ~Game();
 
- 
     Game(const Game&) = delete;
     Game& operator=(const Game&) = delete;
 
-
+    // main cicle
     void Update(float deltaTime, sf::RenderWindow& window);
     void Draw(sf::RenderWindow& window);
+    void Restart();
+    void SetGameSettings();
+    void InitLevel();
 
-  
+    // state machines
     void PushGameState(GameState state);
     void PopGameState();
     void SwitchGameState(GameState newState);
     GameState GetCurrentGameState() const;
-    void Restart(); 
 
-    //SET AND GET FOR APP
-    bool IsInputActive() const { return isInputActive; }
-    std::string& GetTempPlayerName() { return tempPlayerName; }
+
+   //main gets and sets
+    Paddle& GetPaddle() { return paddle; }
+    Ball& GetBall() { return ball; }
     UI& GetUI() { return ui; }
 
+    void InitPaddle() { paddle.Init(*this); }
+    void InitBall() { ball.Init(*this); }
+
+    //main gets and sets
+    bool GetIsInputActive() const { return isInputActive; }
+    void SetIsInputAcitve(bool val) { isInputActive = val; }
+    std::string& GetTempPlayerName() { return tempPlayerName; }
+    void SetTempPlayerName(const std::string& name) { tempPlayerName = name; }
+
+    // records get and set
+    int GetScore() const { return scoreEatenApples; }
+    void AddScore(int points) {
+        scoreEatenApples += points;
+        if (scoreEatenApples > playerRecord) playerRecord = scoreEatenApples;
+    }
+    int GetRecord() const { return playerRecord; }
+
+    // game over get and set
+    bool IsGameFinished() const { return isGameFinished; }
+    void SetGameFinished(bool value) { isGameFinished = value; }
+
+    float GetGameFinishTime() const { return timeSinceGameFinish; }
+    void AddGameFinishTime(float delta) { timeSinceGameFinish += delta; }
+    void SetTimeSinceGameFinish(float val) { timeSinceGameFinish = val; } 
+
+    // settings get and set
+    bool IsSoundOn() const { return isSoundOn; }
+    bool IsMusicOn() const { return isMusicOn; }
+    bool IsHard() const { return isHard; }
+
+    // audio get and set
+    void PlayHitSound() { if (isSoundOn) HitSound.play(); }
+    void PlayLoseSound() { if (isSoundOn) LoseSound.play(); }
+    void PlayMusic() { if (isMusicOn && playinStateMusic.getStatus() != sf::Music::Playing) playinStateMusic.play(); }
+    void StopMusic() { playinStateMusic.stop(); }
+
     
-    void SetGameSettings();
+    void SetBackgroundColor(sf::Color color) { background.setFillColor(color); }
+
+
+    //block
+    std::vector <Block>& GetBlocks() { return blocks; }
+
+
 
 
 private:
-    // IN LOGIC
+    // local logic
     void SwitchGameStateInternal(GameState oldState, GameState newState);
-  
+
     void LoadRecords();
     void SaveRecords();
 
 private:
-  
+    
     Paddle paddle;
     Ball ball;
-
-
     UI ui;
-    math Math; 
 
+  
+    math Math;
     sf::RectangleShape background;
-    std::vector<GameState> gameStateStack;
+    sf::RectangleShape wallTop;
+
+
 
     uint32_t gameMode = 0;
-
     bool isGameFinished = false;
-    float timeSinceGameFinish = 0.f;
+    float timeSinceGameFinish{};
+    std::vector<GameState> gameStateStack;
 
+    int scoreEatenApples = 0; 
+    int playerRecord = 0;    
 
-    int scoreEatenApples = 0;
-    int playerRecord = 0;
-
+    
     sf::Music playinStateMusic;
-    sf::SoundBuffer Sound1;
-    sf::Sound HitSound;
+    sf::SoundBuffer Sound1, Sound2;
+    sf::Sound HitSound, LoseSound;
 
-    sf::SoundBuffer Sound2; 
-    sf::Sound LoseSound;
 
     bool isMusicOn = true;
     bool isSoundOn = true;
     bool isGamePause = false;
     bool isInputActive = false;
 
+  
     bool isEasy = false;
     bool isMiddle = false;
     bool isHard = false;
@@ -113,7 +159,8 @@ private:
 
     std::string tempPlayerName = "";
 
-// FRIENDS
     friend class Application;
-    friend class UI;
+
+    std::vector <Block> blocks;
+
 };

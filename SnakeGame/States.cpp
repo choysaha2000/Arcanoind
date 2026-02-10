@@ -1,13 +1,36 @@
-#include "game.h"
 #include "UI.h"
+#include "Game.h"
 #include <cassert>
 #include <map>
 #include <string>
 
-// ------------UI 
-void UI::InitUI(Game& game)
+// main update
+void UI::Update(float deltaTime, Game& game, sf::RenderWindow& window)
 {
-    assert(font.loadFromFile(RESOURCES_PATH + "\\Fonts\\stencilbtrusbyme.otf"));
+    GameState state = game.GetCurrentGameState();
+    switch (state)
+    {
+    case GameState::Menu:        UpdateMenuState(game, deltaTime); break;
+    case GameState::Playing:     break;
+    case GameState::PauseMenu:   PauseMenuUpdate(game, deltaTime); break;
+    case GameState::Options:     UpdateOptionsState(game, deltaTime); break;
+    case GameState::Diffcult:    UpdateDiffState(game, deltaTime); break;
+    case GameState::Cin:         UpdateCinState(game, deltaTime); break;
+    case GameState::LeaderBoard: UpdateLeaderBoardState(game, deltaTime); break;
+    case GameState::GameOver: UpdateGameOverState(game, deltaTime); break;
+    case GameState::Win: UpdateWinState(game, deltaTime); break;
+    }
+}
+
+void UI::Draw(sf::RenderWindow& window)
+{
+ 
+}
+
+
+void UI::Init(Game& game)
+{
+    assert(font.loadFromFile(RESOURCES_PATH + "Fonts/stencilbtrusbyme.otf"));
 
     scoreText.setFont(font);
     scoreText.setCharacterSize(20);
@@ -18,7 +41,7 @@ void UI::InitUI(Game& game)
     PlayerRecord.setCharacterSize(20);
     PlayerRecord.setFillColor(sf::Color::Blue);
     PlayerRecord.setPosition(250.f, 20.f);
-    PlayerRecord.setString("Record: " + std::to_string(game.playerRecord));
+    PlayerRecord.setString("Record: " + std::to_string(game.GetRecord())); 
 
     BackToMenu.setFont(font);
     BackToMenu.setCharacterSize(30);
@@ -27,9 +50,9 @@ void UI::InitUI(Game& game)
         SCREEN_HEIGHT - BackToMenu.getGlobalBounds().height - 40.f);
     BackToMenu.setString("Press Backspace to back to menu");
 }
+
 std::string UI::GetLeaderboardString(const std::unordered_map<std::string, int>& records)
 {
-
     std::multimap<int, std::string> sortedRecords;
     for (const auto& item : records)
     {
@@ -39,29 +62,30 @@ std::string UI::GetLeaderboardString(const std::unordered_map<std::string, int>&
     std::string result = "===== LEADERBOARD =====\n";
 
     int position = 1;
-
     for (auto it = sortedRecords.rbegin(); it != sortedRecords.rend() && position <= 5; ++it, ++position)
     {
         int score = it->first;
         const std::string& name = it->second;
         std::string line = std::to_string(position) + ". " + name;
-        auto dotsNeeded = dotsNeed - line.length();
-        for (int i = 0; i < dotsNeeded; ++i)
-            line += ".";
-        line += " " + std::to_string(score);
 
+        long long dotsNeeded = dotsNeed - (long long)line.length();
+        if (dotsNeeded > 0) {
+            for (int i = 0; i < dotsNeeded; ++i)
+                line += ".";
+        }
+
+        line += " " + std::to_string(score);
         result += line + "\n";
     }
 
     result += "=======================\n";
     return result;
 }
+
 void UI::InitializeLeaderBoard()
 {
     recordsTable.clear();
-    std::vector<std::string> names = {
-        "Alice", "Bob", "Carol", "Dave", "Eve"
-    };
+    std::vector<std::string> names = { "Alice", "Bob", "Carol", "Dave", "Eve" };
 
     for (const auto& name : names)
     {
@@ -69,7 +93,8 @@ void UI::InitializeLeaderBoard()
         recordsTable[name] = randomScore;
     }
 }
-// -------------
+
+// pause state
 
 void UI::PauseState(Game& game)
 {
@@ -95,8 +120,7 @@ void UI::PauseState(Game& game)
     PauseMenuElement.setCharacterSize(50);
     PauseMenuElement.setFillColor(sf::Color::White);
 
-
-    PauseMenuElement.setString("Your score: " + std::to_string(game.scoreEatenApples));
+    PauseMenuElement.setString("Your score: " + std::to_string(game.GetScore())); 
 
     PauseMenuElement.setPosition(
         (SCREEN_WIDTH - PauseMenuElement.getGlobalBounds().width) / 2.f,
@@ -108,14 +132,15 @@ void UI::PauseMenuUpdate(Game& game, float deltaTime)
 {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
     {
-        if (game.isGameFinished) // friends status with game.class
+        if (game.IsGameFinished())
         {
             game.Restart();
             game.SwitchGameState(GameState::Playing);
         }
         else
         {
-            game.isGameFinished = false;
+            game.SetGameFinished(false); 
+     
             game.SwitchGameState(GameState::Playing);
         }
     }
@@ -132,22 +157,21 @@ void UI::DrawPause(sf::RenderWindow& window)
     window.draw(PauseMenuElement);
 }
 
-// STD CIN STATE
+// cin state
 
 void UI::CinState(Game& game)
 {
-    game.isInputActive = false;
-    game.tempPlayerName = "";
+
+    game.GetTempPlayerName() = ""; 
 
     cinItems.clear();
     sf::Text YES, NO;
 
-    // LYMBDA CMP
     auto setTextParameters = [this](sf::Text& itemText, const std::string& title, int
         fontSize, sf::Color color = sf::Color::Transparent)
         {
             itemText.setString(title);
-            itemText.setFont(font); 
+            itemText.setFont(font);
             itemText.setCharacterSize(fontSize);
             if (color != sf::Color::Transparent)
             {
@@ -176,14 +200,14 @@ void UI::UpdateCinState(Game& game, float deltaTime)
     static float inputTimer = 0.0f;
     inputTimer += deltaTime;
 
-    if (game.isInputActive)
+    if (game.GetIsInputActive()) 
     {
         if (inputTimer > 0.2f && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
         {
-            std::string finalName = game.tempPlayerName;
+            std::string finalName = game.GetTempPlayerName();
             if (finalName.empty()) finalName = "Unknown";
 
-            UpdateLeaderboardGameOver(game.scoreEatenApples, finalName);
+            UpdateLeaderboardGameOver(game.GetScore(), finalName); 
             game.SwitchGameState(GameState::PauseMenu);
             inputTimer = 0.0f;
         }
@@ -209,12 +233,12 @@ void UI::UpdateCinState(Game& game, float deltaTime)
 
         switch (selectedItem) {
         case Cin::YES:
-            game.isInputActive = true;
-            game.tempPlayerName = "";
+            
+            game.GetTempPlayerName() = "";
             break;
 
         case Cin::NO:
-            UpdateLeaderboardGameOver(game.scoreEatenApples, "Player");
+            UpdateLeaderboardGameOver(game.GetScore(), "Player");
             game.SwitchGameState(GameState::PauseMenu);
             break;
         }
@@ -224,10 +248,9 @@ void UI::UpdateCinState(Game& game, float deltaTime)
 
 void UI::DrawCin(Game& game, sf::RenderWindow& window)
 {
-    if (game.isInputActive)
+    if (game.GetIsInputActive())
     {
-      
-        cinElem.setString("ENTER NAME: " + game.tempPlayerName + "_");
+        cinElem.setString("ENTER NAME: " + game.GetTempPlayerName() + "_");
         cinElem.setFillColor(sf::Color::White);
 
         cinElem.setPosition(
@@ -255,7 +278,8 @@ void UI::DrawCin(Game& game, sf::RenderWindow& window)
     }
 }
 
-// OPTIONS STATE
+// option state
+
 void UI::OptionsState(Game& game)
 {
     optionItems.clear();
@@ -274,7 +298,6 @@ void UI::OptionsState(Game& game)
         };
 
     setTextParameters(OptionsElem, "OPTIONS", 50, sf::Color::Red);
-
     OptionsElem.setPosition(
         (SCREEN_WIDTH - OptionsElem.getGlobalBounds().width) / 2.f,
         SCREEN_HEIGHT / 2.f - 100.f);
@@ -302,30 +325,26 @@ void UI::UpdateOptionsState(Game& game, float deltaTime)
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
         optionIndex++;
-        if (optionIndex >= (int)optionItems.size()) 
-            optionIndex = 0;
+        if (optionIndex >= (int)optionItems.size()) optionIndex = 0;
         inputTimer = 0.0f;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
         optionIndex--;
-        if (optionIndex < 0)
-            optionIndex = (int)optionItems.size() - 1; 
+        if (optionIndex < 0) optionIndex = (int)optionItems.size() - 1;
         inputTimer = 0.0f;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
-
         Options selectedItem = optionItems[optionIndex].second;
 
         switch (selectedItem) {
         case Options::Sound:
-            game.isSoundOn = !game.isSoundOn;
+       
             break;
         case Options::Music:
-            game.isMusicOn = !game.isMusicOn;
-            if (game.isMusicOn) game.playinStateMusic.play();
-            else game.playinStateMusic.stop();
+    
+            if (game.IsMusicOn()) game.PlayMusic(); else game.StopMusic();
             break;
         case Options::Back:
             game.SwitchGameState(GameState::Menu);
@@ -338,26 +357,19 @@ void UI::UpdateOptionsState(Game& game, float deltaTime)
 void UI::DrawOptions(sf::RenderWindow& window)
 {
     window.draw(OptionsElem);
-
     for (int i = 0; i < optionItems.size(); ++i) {
         sf::Text& text = optionItems[i].first;
-
-        if (i == optionIndex) {
-            text.setFillColor(sf::Color::Yellow);
-        }
-        else {
-            text.setFillColor(sf::Color::White);
-        }
+        if (i == optionIndex) text.setFillColor(sf::Color::Yellow);
+        else text.setFillColor(sf::Color::White);
         window.draw(text);
     }
 }
 
-// MENU STATE
+// menu state
 
 void UI::StartMenuState()
 {
     menuItems.clear();
-
     sf::Text tStart, tDiff, tOptions, tLeader, tExit;
 
     auto setTextParameters = [this](sf::Text& itemText, const std::string& title, int
@@ -366,20 +378,17 @@ void UI::StartMenuState()
             itemText.setString(title);
             itemText.setFont(font);
             itemText.setCharacterSize(fontSize);
-            if (color != sf::Color::Transparent)
-            {
-                itemText.setFillColor(color);
-            }
+            if (color != sf::Color::Transparent) itemText.setFillColor(color);
         };
 
-    setTextParameters(menuText, "ARCANOID", 50, sf::Color::Green);
+    setTextParameters(menuText, "ARKANOID", 50, sf::Color::Green);
     menuText.setPosition(
         (SCREEN_WIDTH - menuText.getGlobalBounds().width) / 2.f,
         SCREEN_HEIGHT / 2.f - 100.f);
 
     setTextParameters(tStart, "START", 30, sf::Color::White);
-    setTextParameters(tDiff, "DIFFUCULT", 30, sf::Color::White);
-    setTextParameters(tOptions, "OPTION", 30, sf::Color::White);
+    setTextParameters(tDiff, "DIFFICULTY", 30, sf::Color::White);
+    setTextParameters(tOptions, "OPTIONS", 30, sf::Color::White);
     setTextParameters(tLeader, "LEADERBOARD", 30, sf::Color::White);
     setTextParameters(tExit, "EXIT", 30, sf::Color::White);
 
@@ -406,38 +415,23 @@ void UI::UpdateMenuState(Game& game, float deltaTime)
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
         menuIndex++;
-        if (menuIndex >= (int)menuItems.size())
-            menuIndex = 0;
+        if (menuIndex >= (int)menuItems.size()) menuIndex = 0;
         inputTimer = 0.0f;
     }
-
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
         menuIndex--;
-        if (menuIndex < 0)
-            menuIndex = (int)menuItems.size() - 1;
+        if (menuIndex < 0) menuIndex = (int)menuItems.size() - 1;
         inputTimer = 0.0f;
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
-
         MenuItem selectedItem = menuItems[menuIndex].second;
-
         switch (selectedItem) {
-        case MenuItem::Start:
-            game.SwitchGameState(GameState::Playing);
-            break;
-        case MenuItem::Leaderboard:
-            game.SwitchGameState(GameState::LeaderBoard);
-            break;
-        case MenuItem::Options:
-            game.SwitchGameState(GameState::Options);
-            break;
-        case MenuItem::Diffucult:
-            game.SwitchGameState(GameState::Diffcult);
-            break;
-        case MenuItem::Exit:
-            exit(0);
-            break;
+        case MenuItem::Start: game.SwitchGameState(GameState::Playing); break;
+        case MenuItem::Leaderboard: game.SwitchGameState(GameState::LeaderBoard); break;
+        case MenuItem::Options: game.SwitchGameState(GameState::Options); break;
+        case MenuItem::Diffucult: game.SwitchGameState(GameState::Options); break;
+        case MenuItem::Exit: exit(0); break;
         }
         inputTimer = 0.0f;
     }
@@ -446,149 +440,33 @@ void UI::UpdateMenuState(Game& game, float deltaTime)
 void UI::DrawMenu(sf::RenderWindow& window)
 {
     window.draw(menuText);
-
     for (int i = 0; i < menuItems.size(); ++i) {
         sf::Text& text = menuItems[i].first;
-
-        if (i == menuIndex) {
-            text.setFillColor(sf::Color::Yellow);
-        }
-        else {
-            text.setFillColor(sf::Color::White);
-        }
+        if (i == menuIndex) text.setFillColor(sf::Color::Yellow);
+        else text.setFillColor(sf::Color::White);
         window.draw(text);
     }
 }
 
-// DIFF STATE
+
 
 void UI::StartDiffState(Game& game)
 {
-    diffItems.clear();
 
-    sf::Text  tEasy, tEasy2, tMiddle, tHard, tVeryHard, tBack;
-
-    auto setTextParameters = [this](sf::Text& itemText, const std::string& title, int
-        fontSize, sf::Color color = sf::Color::Transparent)
-        {
-            itemText.setString(title);
-            itemText.setFont(font);
-            itemText.setCharacterSize(fontSize);
-            if (color != sf::Color::Transparent)
-            {
-                itemText.setFillColor(color);
-            }
-        };
-
-    setTextParameters(diffElem, "DIFFICULTY CHANGE", 50, sf::Color::Red);
-    diffElem.setPosition(
-        (SCREEN_WIDTH - diffElem.getGlobalBounds().width) / 2.f,
-        SCREEN_HEIGHT / 2.f - 100.f);
-
-    setTextParameters(tEasy, "EASY", 30, sf::Color::White);
-    setTextParameters(tEasy2, "MORE HARD THAN EASY", 30, sf::Color::White);
-    setTextParameters(tMiddle, "MIDDLE", 30, sf::Color::White);
-    setTextParameters(tHard, "HARD", 30, sf::Color::White);
-    setTextParameters(tVeryHard, "VERY HARD", 30, sf::Color::White);
-    setTextParameters(tBack, "BACK", 30, sf::Color::White);
-
-    tEasy.setPosition((SCREEN_WIDTH - tEasy.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f);
-    tEasy2.setPosition((SCREEN_WIDTH - tEasy2.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 50.f);
-    tMiddle.setPosition((SCREEN_WIDTH - tMiddle.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 100.f);
-    tHard.setPosition((SCREEN_WIDTH - tHard.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 150.f);
-    tVeryHard.setPosition((SCREEN_WIDTH - tVeryHard.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 200.f);
-    tBack.setPosition((SCREEN_WIDTH - tBack.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 300.f);
-
-    diffItems.push_back({ tEasy, Diffucult::Easy });
-    diffItems.push_back({ tEasy2, Diffucult::Easy2 });
-    diffItems.push_back({ tMiddle, Diffucult::Middle });
-    diffItems.push_back({ tHard, Diffucult::Hard });
-    diffItems.push_back({ tVeryHard, Diffucult::VeryHard });
-    diffItems.push_back({ tBack, Diffucult::Back });
-
-    if (game.gameMode & (uint32_t)GameSettingBits::EasyMode) selectedDiffIndex = 0;
-    else if (game.gameMode & (uint32_t)GameSettingBits::MiddleMode) selectedDiffIndex = 1;
-    else if (game.gameMode & (uint32_t)GameSettingBits::HardMode) selectedDiffIndex = 2;
-    else if (game.gameMode & (uint32_t)GameSettingBits::VeryHardMode) selectedDiffIndex = 3;
-    else if (game.gameMode & (uint32_t)GameSettingBits::HardcoreMode) selectedDiffIndex = 4;
-
-    diffIndex = 0;
 }
 
 void UI::UpdateDiffState(Game& game, float deltaTime)
 {
-    static float inputTimer = 0.0f;
-    inputTimer += deltaTime;
-    if (inputTimer < 0.2f) return;
-
-    bool anyKeyPressed = false;
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-        diffIndex++;
-        if (diffIndex >= (int)diffItems.size())
-            diffIndex = 0;
-        anyKeyPressed = true;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-        diffIndex--;
-        if (diffIndex < 0)
-            diffIndex = (int)diffItems.size() - 1;
-        anyKeyPressed = true;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
-    {
-        Diffucult selectedItem = diffItems[diffIndex].second;
-
-        if (selectedItem == Diffucult::Back)
-        {
-            game.SwitchGameState(GameState::Menu);
-        }
-        else
-        {
-            selectedDiffIndex = diffIndex;
-            game.gameMode = 0;
-
-            switch (selectedItem)
-            {
-            case Diffucult::Easy: game.gameMode |= (uint32_t)GameSettingBits::EasyMode; break;
-            case Diffucult::Easy2: game.gameMode |= (uint32_t)GameSettingBits::MiddleMode; break;
-            case Diffucult::Middle: game.gameMode |= (uint32_t)GameSettingBits::HardMode; break;
-            case Diffucult::Hard: game.gameMode |= (uint32_t)GameSettingBits::VeryHardMode; break;
-            case Diffucult::VeryHard: game.gameMode |= (uint32_t)GameSettingBits::HardcoreMode; break;
-            }
-            game.SetGameSettings();
-            anyKeyPressed = true;
-        }
-    }
-    if (anyKeyPressed) {
-        inputTimer = 0.0f;
-    }
+   
 }
 
 void UI::DrawDiff(sf::RenderWindow& window)
 {
-    window.draw(diffElem);
-
-    for (int i = 0; i < diffItems.size(); ++i) {
-        sf::Text& text = diffItems[i].first;
-
-        if (i == diffIndex) {
-            text.setFillColor(sf::Color::Yellow);
-        }
-        else if (i == selectedDiffIndex)
-        {
-            text.setFillColor(sf::Color::Red);
-        }
-        else {
-            text.setFillColor(sf::Color::White);
-        }
-        window.draw(text);
-    }
+  
 }
 
-// LEADERBOARD STATE
+// leaderboard 
+
 void UI::UpdateLeaderBoardState(Game& game, float deltaTime)
 {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Backspace))
@@ -602,147 +480,122 @@ void UI::DrawLeaderBoard(sf::RenderWindow& window)
     window.draw(BackToMenu);
 }
 
-// 
-
-void UI::UpdatePlayingState(Game& game, float deltaTime, sf::RenderWindow& window)
-{
-    if (game.isGameFinished) {
-        UpdateGameOverState(game,deltaTime);
-        return;
-    }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Pause)) {
-        game.isGamePause = true;
-        game.SwitchGameState(GameState::PauseMenu);
-        return;
-    }
-
-    // 1 tick. coordinate update by input information
-    game.paddle.Update(deltaTime, window);
-
-
-    game.ball.Update(deltaTime);
-
-    // collision logic
-    sf::Vector2f ballPos = game.ball.GetPosition();
-    sf::FloatRect ballBounds = game.ball.GetBounds();
-    sf::FloatRect paddleBounds = game.paddle.GetBounds();
-
-    // wall
-
-    // left
-    if (ballPos.x - BALL_RADIUS < 0) game.ball.BounceX();
-    // right
-    if (ballPos.x + BALL_RADIUS > SCREEN_WIDTH) game.ball.BounceX();
-    // top
-    if (ballPos.y - BALL_RADIUS < 0) game.ball.BounceY();
-
-    // down 
-    if (ballPos.y + BALL_RADIUS > SCREEN_HEIGHT) {
-        if (game.isSoundOn) game.LoseSound.play();
-        game.SwitchGameState(GameState::GameOver);
-        return;
-    }
-
-    // paddle
-    if (ballBounds.intersects(paddleBounds))
-    {
-        // checking that ball is flying to down (stack with paddle checK)
-        if (game.ball.GetVelocity().y > 0)
-        {
-            game.ball.BounceY();
-            if (game.isSoundOn) game.HitSound.play();
-
-
-            int points = 10;
-
-            if (game.isHard) points = 20;
-
-            game.scoreEatenApples += points;
-            if (game.scoreEatenApples > game.playerRecord) game.playerRecord = game.scoreEatenApples;
-
-            scoreText.setString("Score: " + std::to_string(game.scoreEatenApples));
-        }
-    }
-}
-void UI::DrawPlaying(Game& game, sf::RenderWindow& window)
-{
-    window.draw(scoreText);
-    window.draw(PlayerRecord);
-}
-void UI::StartPlayinState(Game& game)
-{
-    // After lose, paddle and ball reInit their position
-    game.paddle.Init();
-    game.ball.Init();
-
-
-    game.scoreEatenApples = 0;
-    scoreText.setString("Score: " + std::to_string(game.scoreEatenApples));
-
-    if (game.isMusicOn) {
-        if (game.playinStateMusic.getStatus() != sf::Music::Playing)
-            game.playinStateMusic.play();
-    }
-}
+// gameover state
 
 void UI::StartGameOverState(Game& game)
 {
-    game.playinStateMusic.stop();
-    game.isGameFinished = true;
-    game.timeSinceGameFinish = 0.f;
+    game.StopMusic();
+    game.SetGameFinished(true);
+    game.SetTimeSinceGameFinish(0.f);
 }
+
 void UI::GameOVERUI(Game& game)
 {
-    game.playinStateMusic.stop();
-    game.isGameFinished = true;
-    game.timeSinceGameFinish = 0.f;
+    game.StopMusic();
+    game.SetGameFinished(true);
+    game.SetTimeSinceGameFinish(0.f);
 
     gameOverText.setString("Game Over");
     gameOverText.setFont(font);
     gameOverText.setCharacterSize(100);
     gameOverText.setFillColor(sf::Color::White);
 
-
     sf::FloatRect textRect = gameOverText.getLocalBounds();
-
-    gameOverText.setOrigin(
-        textRect.left + textRect.width / 2.f,
-        textRect.top + textRect.height / 2.f
-    );
-
-    // set text in center
+    gameOverText.setOrigin(textRect.left + textRect.width / 2.f, textRect.top + textRect.height / 2.f);
     gameOverText.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f);
 }
+
 void UI::UpdateGameOverState(Game& game, float deltaTime)
 {
-    game.playinStateMusic.stop();
-    if (game.timeSinceGameFinish <= PAUSE_LENGTH)
+    if (game.GetGameFinishTime() <= PAUSE_LENGTH)
     {
-        game.timeSinceGameFinish += deltaTime;
-        game.background.setFillColor(sf::Color::Red);
+        game.AddGameFinishTime(deltaTime);
+        game.SetBackgroundColor(sf::Color::Red);
     }
     else
     {
-        game.background.setFillColor(sf::Color::Black);
-        if (game.scoreEatenApples >= 10)
+        game.SetBackgroundColor(sf::Color::Black);
+        if (game.GetScore() >= 10)
             game.SwitchGameState(GameState::Cin);
         else
             game.SwitchGameState(GameState::PauseMenu);
     }
 }
+
+// leaderboard state
+
 void UI::UpdateLeaderboardGameOver(int playerScore, std::string name)
 {
-
-    const std::string PLAYER_NAME = name;
-    recordsTable[PLAYER_NAME] = playerScore;
-
-
+    recordsTable[name] = playerScore;
     std::string leaderBoardText = GetLeaderboardString(recordsTable);
     gameOverText.setString(leaderBoardText);
     gameOverText.setCharacterSize(18);
     gameOverText.setFont(font);
     gameOverText.setOrigin(0.f, 0.f);
     gameOverText.setPosition(50.f, 100.f);
+}
 
+
+void UI::DrawPlaying(Game& game, sf::RenderWindow& window)
+{
+    window.draw(scoreText);
+    window.draw(PlayerRecord);
+}
+
+void UI::StartPlayinState(Game& game)
+{
+    game.GetPaddle().Init(game); 
+    game.GetBall().Init(game);
+    game.InitLevel();
+
+    // game.SetScore(0);
+    scoreText.setString("Score: 0"); 
+
+    if (game.IsMusicOn()) {
+        game.PlayMusic();
+    }
+}
+
+void UI::StartWinState(Game& game)
+{
+
+    game.StopMusic();
+    game.SetGameFinished(true);
+    game.SetTimeSinceGameFinish(0.f);
+
+    winText.setFont(font);
+    winText.setString("YOU WIN!");
+    winText.setCharacterSize(80);
+    winText.setFillColor(sf::Color::White);
+
+    sf::FloatRect textRect = winText.getLocalBounds();
+    winText.setOrigin(textRect.left + textRect.width / 2.f, textRect.top + textRect.height / 2.f);
+    winText.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f);
+
+ 
+
+}
+
+void UI::UpdateWinState(Game& game, float deltaTime)
+{
+
+    if (game.GetGameFinishTime() <= PAUSE_LENGTH)
+    {
+        game.AddGameFinishTime(deltaTime);
+        game.SetBackgroundColor(sf::Color::Green);
+    }
+    else
+    {
+        game.SetBackgroundColor(sf::Color::Black);
+        if (game.GetScore() >= 100)
+            game.SwitchGameState(GameState::Cin);
+        else
+            game.SwitchGameState(GameState::PauseMenu);
+    }
+  
+}
+
+void UI::DrawWin(sf::RenderWindow& window)
+{
+    window.draw(winText);
 }

@@ -2,7 +2,7 @@
 #include <cmath>
 
 
-// SET PADDLE
+// set paddle
 Paddle::Paddle()
     : speed(PADDLE_SPEED)
 {
@@ -11,19 +11,18 @@ Paddle::Paddle()
     shape.setOrigin(PADDLE_WIDTH / 2.f, PADDLE_HEIGHT / 2.f);
 }
 
-// INIT IN NEW GAME 
-void Paddle::Init()
+void Paddle::Init(Game& game)
 {
     shape.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT - PADDLE_Y_OFFSET);
 }
 
-// POSITION UPDATE EVERY 1 TICK
-void Paddle::Update(float deltaTime, const sf::RenderWindow& window)
+
+void Paddle::Update(float deltaTime, Game& game, sf::RenderWindow& window)
 {
     sf::Vector2f pos = shape.getPosition();
     bool keyInput = false;
 
-    // Клавиатура
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
         pos.x -= speed * deltaTime;
@@ -35,11 +34,10 @@ void Paddle::Update(float deltaTime, const sf::RenderWindow& window)
         keyInput = true;
     }
 
-    // MOUSE
     if (!keyInput)
     {
         sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        // CHECK MOUSE IN GAME WINDOW
+        
         if (mousePos.x >= 0 && mousePos.x <= SCREEN_WIDTH &&
             mousePos.y >= 0 && mousePos.y <= SCREEN_HEIGHT)
         {
@@ -47,7 +45,7 @@ void Paddle::Update(float deltaTime, const sf::RenderWindow& window)
         }
     }
 
-    // LIMIT BORDER
+
     if (pos.x - PADDLE_WIDTH / 2.f < 0.f) pos.x = PADDLE_WIDTH / 2.f;
     if (pos.x + PADDLE_WIDTH / 2.f > SCREEN_WIDTH) pos.x = SCREEN_WIDTH - PADDLE_WIDTH / 2.f;
 
@@ -63,9 +61,7 @@ sf::FloatRect Paddle::GetBounds() const { return shape.getGlobalBounds(); }
 sf::Vector2f Paddle::GetPosition() const { return shape.getPosition(); }
 
 
-// BALL
-
-// BALL SET
+// ball
 Ball::Ball()
     : speed(BALL_SPEED)
 {
@@ -74,16 +70,16 @@ Ball::Ball()
     shape.setOrigin(BALL_RADIUS, BALL_RADIUS);
 }
 
-// BALL IN NEW GAME
-void Ball::Init()
+
+void Ball::Init(Game& game)
 {
     shape.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f);
     
     velocity = { speed * 0.707f, speed * 0.707f };
 }
 
-// POSITION UPDATE EVERY 1 TICK
-void Ball::Update(float deltaTime)
+
+void Ball::Update(float deltaTime, Game& game, sf::RenderWindow& window)
 {
     shape.move(velocity * deltaTime);
 }

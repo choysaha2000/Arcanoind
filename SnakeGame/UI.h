@@ -3,7 +3,8 @@
 #include "Constants.h"
 #include <vector>
 #include <unordered_map>
-#include <fstream>
+#include <string>
+#include "GameObject.h"
 
 class Game;
 
@@ -42,20 +43,25 @@ enum class Cin
 	Count
 };
 
-class UI
+class UI: public GameObject
 {
 public:
 	UI() = default;
-	~UI() = default;
+    ~UI() override = default;
 
+    
+    void StartWinState(Game& game);
+    void UpdateWinState(Game& game, float deltaTime);
+    void DrawWin(sf::RenderWindow& window);
 
 
 	UI(const UI&) = delete;
 	UI& operator = (const UI&) = delete;
 
 
-	void InitUI(Game& game);
-
+	void Init(Game& game) override;
+    void Update(float deltaTime, Game& game, sf::RenderWindow& window) override;
+    void Draw(sf::RenderWindow& window) override;
 
     void InitializeLeaderBoard();
     void UpdateLeaderboardGameOver(int playerScore, std::string name);
@@ -116,7 +122,7 @@ private:
     sf::Text startText;
     sf::Text leaderboard;
     sf::Text exitText;
-
+    sf::Text winText;
 
     sf::Text PauseMenuPlay;
     sf::Text PauseMenuMenu;
@@ -146,7 +152,6 @@ private:
     int cinIndex = 0;
     sf::Text cinElem;
 
-  // UI NOW IS FRIENDLY TO GAME
     friend class Game;
 };
 

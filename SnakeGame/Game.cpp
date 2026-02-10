@@ -2,10 +2,10 @@
 #include <cassert>
 #include <algorithm> 
 
-// RAII Inisitialization in Class constructor 
+// RAII INIT
 Game::Game()
 {
-   // load resourse
+  // resourse load
     if (playinStateMusic.openFromFile(RESOURCES_PATH + "PlayingState.ogg")) {
         playinStateMusic.setLoop(true);
     }
@@ -20,67 +20,114 @@ Game::Game()
     background.setSize(sf::Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT));
     background.setPosition(0.f, 0.f);
 
-    paddle.Init();
-    ball.Init();
+    paddle.Init(*this);
+    ball.Init(*this);
 
-    ui.InitUI(*this);
+    ui.Init(*this);
 
     LoadRecords(); 
     SetGameSettings();
     PushGameState(GameState::Menu);
 }
 
+void Game::InitLevel()
+{
+    blocks.clear();
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            Block b;
+            // colour set by position
+            sf::Color color = (i % 2 == 0) ? sf::Color::Yellow : sf::Color::Green;
+            b.Spawn({ startX + j * gapX, startY + i * gapY }, color);
+            blocks.push_back(b);
+        }
+    }
+}
 
 void Game::Restart()
 {
-    paddle.Init();
-    ball.Init();
-    // ui.Init(*this); // UI пересоздавать не обязательно, только если сбросить текст
+    paddle.Init(*this);
+    ball.Init(*this);
     SetGameSettings();
-    // Сброс счета
-    scoreEatenApples = 0; // Можно переименовать в currentScore
+    scoreEatenApples = 0; 
     PushGameState(GameState::Menu);
 }
 
 Game::~Game()
 {
-    // vectors have autoclear. 
 }
 
 
-// UPDATE HAVE WINDOW ARGUMENT CUZ THERE'S MOVING BY PLAYER'S MOUSE
-// ALL UPDATE STATE
+// UPDATE WINDOW ARGUMENT HERE CUZ THERE'S MOUSE INPUT 
 void Game::Update(float deltaTime, sf::RenderWindow& window)
 {
-    GameState gameState = GetCurrentGameState();
-    switch (gameState)
+    GameState state = GetCurrentGameState();
+
+
+    ui.Update(deltaTime, *this, window);
+
+   
+    if (state == GameState::Playing)
     {
-    case GameState::Playing:
-        ui.UpdatePlayingState(*this, deltaTime, window);
-        break;
-    case GameState::GameOver:
-        ui.UpdateGameOverState(*this, deltaTime);
-        break;
-    case GameState::Menu:
-        ui.UpdateMenuState(*this, deltaTime);   
-        break;
-    case GameState::LeaderBoard:
-        ui.UpdateLeaderBoardState(*this, deltaTime);
-        break;
-    case GameState::PauseMenu:
-        ui.PauseMenuUpdate(*this, deltaTime);
-        break;
-    case GameState::Options:
-        ui.UpdateOptionsState(*this, deltaTime);
-        break;
-    case GameState::Diffcult:
-        ui.UpdateDiffState(*this, deltaTime);
-        break;
-    case GameState::Cin:
-        ui.UpdateCinState(*this, deltaTime);
-        break;
+        paddle.Update(deltaTime, *this, window);
+        ball.Update(deltaTime, *this, window);
+
+        // collision
+        sf::Vector2f ballPos = ball.GetPosition();
+        sf::FloatRect ballBounds = ball.GetBounds();
+        sf::FloatRect paddleBounds = paddle.GetBounds();
+            
+        
+        if (ballPos.x - BALL_RADIUS < 0) ball.BounceX();
+        if (ballPos.x + BALL_RADIUS > SCREEN_WIDTH) ball.BounceX();
+        if (ballPos.y - BALL_RADIUS < 0) ball.BounceY();
+
+        // game over 
+        if (ballPos.y + BALL_RADIUS > SCREEN_HEIGHT)
+        {
+            if (isSoundOn) LoseSound.play();
+            isGameFinished = true;
+            SwitchGameState(GameState::GameOver);
+            return;
+        }
+
+        // paddle
+        if (ballBounds.intersects(paddleBounds) && ball.GetVelocity().y > 0)
+        {
+            ball.BounceY();
+            if (isSoundOn) HitSound.play();
+
+            scoreEatenApples += 10;
+            if (scoreEatenApples > playerRecord) playerRecord = scoreEatenApples;
+            ui.scoreText.setString("Score: " + std::to_string(scoreEatenApples));
+        }
+
+        // blocks
+        int activeBlocks = 0; 
+
+        for (auto& block : blocks)
+        {
+            if (!block.IsDestroyed())
+            {
+                activeBlocks++;
+                if (ballBounds.intersects(block.GetBounds()))
+                {
+                    block.Destroy();
+                    ball.BounceY(); 
+
+                    PlayHitSound();
+                    AddScore(10); 
+                }
+            }
+            else if (activeBlocks == 0)
+            {
+                SwitchGameState(GameState::Win);
+            }
+        }
+
     }
 }
+
 
 void Game::Draw(sf::RenderWindow& window)
 {
@@ -93,12 +140,25 @@ void Game::Draw(sf::RenderWindow& window)
     {
         paddle.Draw(window);
         ball.Draw(window);
+        for (auto& block : blocks)
+        {
+            block.Draw(window);
+        }
         ui.DrawPlaying(*this, window);
+
+
+      
     }
     else if (state == GameState::GameOver)
     {
         window.draw(ui.gameOverText);
     }
+
+    else if (state == GameState::Win) 
+    {
+        ui.DrawWin(window); 
+    }
+
     else if (state == GameState::Menu)
     {
         ui.DrawMenu(window);
@@ -149,7 +209,7 @@ void Game::SetGameSettings()
 }
 
 
-// LIFO
+// lifo
 void Game::PushGameState(GameState state)
 {
     GameState oldState = GetCurrentGameState();
@@ -187,20 +247,41 @@ void Game::SwitchGameStateInternal(GameState oldState, GameState newState)
 {
     switch (newState)
     {
-    case GameState::Playing: ui.StartPlayinState(*this); break;
-    case GameState::GameOver: ui.GameOVERUI(*this); break;
-    case GameState::Menu: ui.StartMenuState(); break;
-    case GameState::LeaderBoard: ui.InitUI(*this); break;
-    case GameState::PauseMenu: ui.PauseState(*this); break;
-    case GameState::Diffcult: ui.StartDiffState(*this); break;
-    case GameState::Options: ui.OptionsState(*this); break;
-    case GameState::Cin: ui.CinState(*this); break;
+    case GameState::Playing:
+        ui.StartPlayinState(*this);         
+        break;
+    case GameState::GameOver:
+        ui.GameOVERUI(*this);
+        break;
+    case GameState::Menu:
+        ui.StartMenuState();
+        break;
+    case GameState::LeaderBoard:
+        ui.Init(*this);             
+        break;
+    case GameState::PauseMenu:
+        ui.PauseState(*this);
+        break;
+    case GameState::Diffcult:
+        ui.StartDiffState(*this);
+        break;
+    case GameState::Options:
+        ui.OptionsState(*this);
+        break;
+    case GameState::Cin:
+        ui.CinState(*this);
+        break;
+
+    case GameState::Win:
+        ui.StartWinState(*this);
+        break;
+    default:
+        break;
     }
 }
 
 
-
-// SERIALIZATION AND DESEREILIZATION
+// load and save resources
 void Game::LoadRecords()
 {
     std::ifstream file(SAVE_FILE);
@@ -229,4 +310,4 @@ void Game::SaveRecords()
 }
 
 
-//  REMOVE TO STATES
+

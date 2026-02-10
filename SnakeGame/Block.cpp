@@ -1,7 +1,5 @@
 #include "Block.h"
 
-// –азмеры блока можно вынести в Constants.h, но пусть пока будут тут
-
 
 Block::Block()
 {
@@ -12,7 +10,7 @@ Block::Block()
 
 void Block::Init(Game& game)
 {
-    // ѕустой метод, так как мы используем Spawn дл€ конкретной позиции
+  
     isDestroyed = false;
 }
 
@@ -25,7 +23,7 @@ void Block::Spawn(sf::Vector2f position, sf::Color color)
 
 void Block::Update(float deltaTime, Game& game, sf::RenderWindow& window)
 {
-    // Ѕлоки статичны, логики обновлени€ нет
+  
 }
 
 void Block::Draw(sf::RenderWindow& window)

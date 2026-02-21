@@ -28,6 +28,9 @@
     <ClCompile Include="Block.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="SolidBlock.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -38,5 +41,6 @@
     <ClInclude Include="UI.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Block.h" />
+    <ClInclude Include="SolidBlock.h" />
   </ItemGroup>
 </Project>

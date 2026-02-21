@@ -11,6 +11,9 @@
 #include <vector> 
 #include "Math.h"
 #include "Block.h"
+#include <memory>
+#include "SolidBlock.h"
+
 
 const std::string SAVE_FILE = "records.txt";
 
@@ -106,7 +109,7 @@ public:
 
 
     //block
-    std::vector <Block>& GetBlocks() { return blocks; }
+    std::vector<std::unique_ptr<Block>>& GetBlocks() { return blocks; }
 
 
 
@@ -161,6 +164,7 @@ private:
 
     friend class Application;
 
-    std::vector <Block> blocks;
+
+    std::vector<std::unique_ptr<Block>> blocks;
 
 };

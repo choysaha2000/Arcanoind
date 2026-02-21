@@ -33,6 +33,11 @@ void Block::Draw(sf::RenderWindow& window)
     }
 }
 
+void Block::Hit()
+{
+    isDestroyed = true;
+}
+
 sf::FloatRect Block::GetBounds() const
 {
     return shape.getGlobalBounds();

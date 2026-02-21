@@ -2,8 +2,8 @@
 #include <string>
 
 const std::string RESOURCES_PATH = "Resources/";
-const int SCREEN_WIDTH = 1280;
-const int SCREEN_HEIGHT = 800;
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 1000;
 
 struct Vector2D { float x = 0; float y = 0; };
 typedef Vector2D Position2D;
@@ -33,11 +33,9 @@ const float BALL_SPEED = 350.f;
 const float BLOCK_WIDTH = 60.f;
 const float BLOCK_HEIGHT = 75.f;
 
-const int rows = 1;
+const int rows = 5;
 const int cols = 10;
-
-const float startX = 100.f;
-const float startY = 50.f;
-
-const float gapX = 70.f;
+const float startX = 100.f; 
+const float startY = 100.f;
+const float gapX = 70.f; 
 const float gapY = 30.f;

@@ -2,6 +2,8 @@
 #include <cassert>
 #include <algorithm> 
 
+
+
 // RAII INIT
 Game::Game()
 {
@@ -33,13 +35,21 @@ Game::Game()
 void Game::InitLevel()
 {
     blocks.clear();
+
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            Block b;
-            // colour set by position
-            sf::Color color = (i % 2 == 0) ? sf::Color::Yellow : sf::Color::Green;
-            b.Spawn({ startX + j * gapX, startY + i * gapY }, color);
-            blocks.push_back(b);
+
+            if (i == 0) {
+                auto brick = std::make_unique<SolidBrick>();
+                brick->Spawn({ startX + j * gapX, startY + i * gapY }, sf::Color::Red);
+                blocks.push_back(std::move(brick));
+            }
+            else {
+                auto brick = std::make_unique<Block>();
+                sf::Color color = (i % 2 == 0) ? sf::Color::Green : sf::Color::Blue;
+                brick->Spawn({ startX + j * gapX, startY + i * gapY }, color);
+                blocks.push_back(std::move(brick));
+            }
         }
     }
 }
@@ -103,26 +113,31 @@ void Game::Update(float deltaTime, sf::RenderWindow& window)
         }
 
         // blocks
-        int activeBlocks = 0; 
+
+
+        int activeBlocks = 0;
 
         for (auto& block : blocks)
         {
-            if (!block.IsDestroyed())
+            if (!block->IsDestroyed()) 
             {
                 activeBlocks++;
-                if (ballBounds.intersects(block.GetBounds()))
+                if (ballBounds.intersects(block->GetBounds()))
                 {
-                    block.Destroy();
-                    ball.BounceY(); 
-
+                    block->Hit(); 
+                    ball.BounceY();
                     PlayHitSound();
-                    AddScore(10); 
+                    AddScore(10);
+
+                    break;
                 }
             }
-            else if (activeBlocks == 0)
-            {
-                SwitchGameState(GameState::Win);
-            }
+        }
+
+        if (activeBlocks == 0)
+        {
+
+            SwitchGameState(GameState::Win);
         }
 
     }
@@ -142,7 +157,7 @@ void Game::Draw(sf::RenderWindow& window)
         ball.Draw(window);
         for (auto& block : blocks)
         {
-            block.Draw(window);
+            block->Draw(window);
         }
         ui.DrawPlaying(*this, window);
 

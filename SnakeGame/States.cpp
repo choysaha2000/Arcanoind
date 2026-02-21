@@ -489,6 +489,7 @@ void UI::StartGameOverState(Game& game)
     game.SetTimeSinceGameFinish(0.f);
 }
 
+
 void UI::GameOVERUI(Game& game)
 {
     game.StopMusic();

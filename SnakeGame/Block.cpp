@@ -3,8 +3,8 @@
 
 Block::Block()
 {
-    shape.setSize({ BLOCK_WIDTH, BLOCK_HEIGHT });
-    shape.setOrigin(BLOCK_WIDTH / 2.f, BLOCK_HEIGHT / 2.f);
+    shape.setSize({ SETTINGS.BLOCK_WIDTH, SETTINGS.BLOCK_HEIGHT });
+    shape.setOrigin(SETTINGS.BLOCK_WIDTH / 2.f, SETTINGS.BLOCK_HEIGHT / 2.f);
     isDestroyed = false;
 }
 

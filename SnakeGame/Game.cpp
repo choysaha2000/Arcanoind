@@ -8,18 +8,18 @@
 Game::Game()
 {
   // resourse load
-    if (playinStateMusic.openFromFile(RESOURCES_PATH + "PlayingState.ogg")) {
+    if (playinStateMusic.openFromFile(SETTINGS.RESOURCES_PATH + "PlayingState.ogg")) {
         playinStateMusic.setLoop(true);
     }
 
-    assert(Sound1.loadFromFile(RESOURCES_PATH + "AppleEat.wav")); 
-    assert(Sound2.loadFromFile(RESOURCES_PATH + "Lose.wav"));     
+    assert(Sound1.loadFromFile(SETTINGS.RESOURCES_PATH + "AppleEat.wav")); 
+    assert(Sound2.loadFromFile(SETTINGS.RESOURCES_PATH + "Lose.wav"));     
 
     HitSound.setBuffer(Sound1);
     LoseSound.setBuffer(Sound2);
 
     background.setFillColor(sf::Color::Black); 
-    background.setSize(sf::Vector2f(SCREEN_WIDTH, SCREEN_HEIGHT));
+    background.setSize(sf::Vector2f((float)SETTINGS.SCREEN_WIDTH, (float)SETTINGS.SCREEN_HEIGHT));
     background.setPosition(0.f, 0.f);
 
     paddle.Init(*this);
@@ -36,18 +36,18 @@ void Game::InitLevel()
 {
     blocks.clear();
 
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
+    for (int i = 0; i < SETTINGS.rows; ++i) {
+        for (int j = 0; j < SETTINGS.cols; ++j) {
 
             if (i == 0) {
                 auto brick = std::make_unique<SolidBrick>();
-                brick->Spawn({ startX + j * gapX, startY + i * gapY }, sf::Color::Red);
+                brick->Spawn({ SETTINGS.startX + j * SETTINGS.gapX, SETTINGS.startY + i * SETTINGS.gapY }, sf::Color::Red);
                 blocks.push_back(std::move(brick));
             }
             else {
                 auto brick = std::make_unique<Block>();
                 sf::Color color = (i % 2 == 0) ? sf::Color::Green : sf::Color::Blue;
-                brick->Spawn({ startX + j * gapX, startY + i * gapY }, color);
+                brick->Spawn({ SETTINGS.startX + j * SETTINGS.gapX, SETTINGS.startY + i * SETTINGS.gapY }, color);
                 blocks.push_back(std::move(brick));
             }
         }
@@ -88,12 +88,12 @@ void Game::Update(float deltaTime, sf::RenderWindow& window)
         sf::FloatRect paddleBounds = paddle.GetBounds();
             
         
-        if (ballPos.x - BALL_RADIUS < 0) ball.BounceX();
-        if (ballPos.x + BALL_RADIUS > SCREEN_WIDTH) ball.BounceX();
-        if (ballPos.y - BALL_RADIUS < 0) ball.BounceY();
+        if (ballPos.x - SETTINGS.BALL_RADIUS < 0) ball.BounceX();
+        if (ballPos.x + SETTINGS.BALL_RADIUS > SETTINGS.SCREEN_WIDTH) ball.BounceX();
+        if (ballPos.y - SETTINGS.BALL_RADIUS < 0) ball.BounceY();
 
         // game over 
-        if (ballPos.y + BALL_RADIUS > SCREEN_HEIGHT)
+        if (ballPos.y + SETTINGS.BALL_RADIUS > SETTINGS.SCREEN_HEIGHT)
         {
             if (isSoundOn) LoseSound.play();
             isGameFinished = true;

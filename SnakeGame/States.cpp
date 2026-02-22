@@ -30,7 +30,7 @@ void UI::Draw(sf::RenderWindow& window)
 
 void UI::Init(Game& game)
 {
-    assert(font.loadFromFile(RESOURCES_PATH + "Fonts/stencilbtrusbyme.otf"));
+    assert(font.loadFromFile(SETTINGS.RESOURCES_PATH + "Fonts/stencilbtrusbyme.otf"));
 
     scoreText.setFont(font);
     scoreText.setCharacterSize(20);
@@ -47,7 +47,7 @@ void UI::Init(Game& game)
     BackToMenu.setCharacterSize(30);
     BackToMenu.setFillColor(sf::Color::White);
     BackToMenu.setPosition(20.f,
-        SCREEN_HEIGHT - BackToMenu.getGlobalBounds().height - 40.f);
+        SETTINGS.SETTINGS.SCREEN_HEIGHT - BackToMenu.getGlobalBounds().height - 40.f);
     BackToMenu.setString("Press Backspace to back to menu");
 }
 
@@ -68,7 +68,7 @@ std::string UI::GetLeaderboardString(const std::unordered_map<std::string, int>&
         const std::string& name = it->second;
         std::string line = std::to_string(position) + ". " + name;
 
-        long long dotsNeeded = dotsNeed - (long long)line.length();
+        long long dotsNeeded = SETTINGS.dotsNeed - (long long)line.length();
         if (dotsNeeded > 0) {
             for (int i = 0; i < dotsNeeded; ++i)
                 line += ".";
@@ -89,7 +89,7 @@ void UI::InitializeLeaderBoard()
 
     for (const auto& name : names)
     {
-        int randomScore = 1 + (rand() % ScorePlayers);
+        int randomScore = 1 + (rand() % SETTINGS.ScorePlayers);
         recordsTable[name] = randomScore;
     }
 }
@@ -103,8 +103,8 @@ void UI::PauseState(Game& game)
     PauseMenuPlay.setFillColor(sf::Color::White);
     PauseMenuPlay.setString("Space to play");
     PauseMenuPlay.setPosition(
-        (SCREEN_WIDTH - PauseMenuPlay.getGlobalBounds().width) / 2.f,
-        SCREEN_HEIGHT - PauseMenuPlay.getGlobalBounds().height - bottomPadding
+        (SETTINGS.SCREEN_WIDTH - PauseMenuPlay.getGlobalBounds().width) / 2.f,
+        SETTINGS.SETTINGS.SCREEN_HEIGHT - PauseMenuPlay.getGlobalBounds().height - SETTINGS.bottomPadding
     );
 
     PauseMenuMenu.setFont(font);
@@ -112,8 +112,8 @@ void UI::PauseState(Game& game)
     PauseMenuMenu.setFillColor(sf::Color::White);
     PauseMenuMenu.setString("Backspace to menu");
     PauseMenuMenu.setPosition(
-        (SCREEN_WIDTH - PauseMenuMenu.getGlobalBounds().width) / 2.f,
-        PauseMenuPlay.getPosition().y - PauseMenuMenu.getGlobalBounds().height - spacing
+        (SETTINGS.SCREEN_WIDTH - PauseMenuMenu.getGlobalBounds().width) / 2.f,
+        PauseMenuPlay.getPosition().y - PauseMenuMenu.getGlobalBounds().height - SETTINGS.spacing
     );
 
     PauseMenuElement.setFont(font);
@@ -123,7 +123,7 @@ void UI::PauseState(Game& game)
     PauseMenuElement.setString("Your score: " + std::to_string(game.GetScore())); 
 
     PauseMenuElement.setPosition(
-        (SCREEN_WIDTH - PauseMenuElement.getGlobalBounds().width) / 2.f,
+        (SETTINGS.SCREEN_WIDTH - PauseMenuElement.getGlobalBounds().width) / 2.f,
         100.f
     );
 }
@@ -181,14 +181,14 @@ void UI::CinState(Game& game)
 
     setTextParameters(cinElem, "PRESS YOUR NAME", 50, sf::Color::Red);
     cinElem.setPosition(
-        (SCREEN_WIDTH - cinElem.getGlobalBounds().width) / 2.f,
-        SCREEN_HEIGHT / 2.f - 100.f);
+        (SETTINGS.SCREEN_WIDTH - cinElem.getGlobalBounds().width) / 2.f,
+        SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f - 100.f);
 
     setTextParameters(YES, "YES", 30, sf::Color::White);
     setTextParameters(NO, "NO", 30, sf::Color::White);
 
-    YES.setPosition((SCREEN_WIDTH - YES.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f);
-    NO.setPosition((SCREEN_WIDTH - NO.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 50.f);
+    YES.setPosition((SETTINGS.SCREEN_WIDTH - YES.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f);
+    NO.setPosition((SETTINGS.SCREEN_WIDTH - NO.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 50.f);
 
     cinItems.push_back({ YES, Cin::YES });
     cinItems.push_back({ NO, Cin::NO });
@@ -254,8 +254,8 @@ void UI::DrawCin(Game& game, sf::RenderWindow& window)
         cinElem.setFillColor(sf::Color::White);
 
         cinElem.setPosition(
-            (SCREEN_WIDTH - cinElem.getGlobalBounds().width) / 2.f,
-            SCREEN_HEIGHT / 2.f
+            (SETTINGS.SCREEN_WIDTH - cinElem.getGlobalBounds().width) / 2.f,
+            SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f
         );
         window.draw(cinElem);
     }
@@ -264,8 +264,8 @@ void UI::DrawCin(Game& game, sf::RenderWindow& window)
         cinElem.setString("PRESS YOUR NAME");
         cinElem.setFillColor(sf::Color::Red);
         cinElem.setPosition(
-            (SCREEN_WIDTH - cinElem.getGlobalBounds().width) / 2.f,
-            SCREEN_HEIGHT / 2.f - 100.f);
+            (SETTINGS.SCREEN_WIDTH - cinElem.getGlobalBounds().width) / 2.f,
+            SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f - 100.f);
 
         window.draw(cinElem);
 
@@ -299,16 +299,16 @@ void UI::OptionsState(Game& game)
 
     setTextParameters(OptionsElem, "OPTIONS", 50, sf::Color::Red);
     OptionsElem.setPosition(
-        (SCREEN_WIDTH - OptionsElem.getGlobalBounds().width) / 2.f,
-        SCREEN_HEIGHT / 2.f - 100.f);
+        (SETTINGS.SCREEN_WIDTH - OptionsElem.getGlobalBounds().width) / 2.f,
+        SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f - 100.f);
 
     setTextParameters(tSound, "SOUND", 30, sf::Color::White);
     setTextParameters(tMusic, "MUSIC", 30, sf::Color::White);
     setTextParameters(tBack, "BACK", 30, sf::Color::White);
 
-    tSound.setPosition((SCREEN_WIDTH - tSound.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f);
-    tMusic.setPosition((SCREEN_WIDTH - tMusic.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 50.f);
-    tBack.setPosition((SCREEN_WIDTH - tBack.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 100.f);
+    tSound.setPosition((SETTINGS.SCREEN_WIDTH - tSound.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f);
+    tMusic.setPosition((SETTINGS.SCREEN_WIDTH - tMusic.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 50.f);
+    tBack.setPosition((SETTINGS.SCREEN_WIDTH - tBack.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 100.f);
 
     optionItems.push_back({ tSound, Options::Sound });
     optionItems.push_back({ tMusic, Options::Music });
@@ -383,8 +383,8 @@ void UI::StartMenuState()
 
     setTextParameters(menuText, "ARKANOID", 50, sf::Color::Green);
     menuText.setPosition(
-        (SCREEN_WIDTH - menuText.getGlobalBounds().width) / 2.f,
-        SCREEN_HEIGHT / 2.f - 100.f);
+        (SETTINGS.SCREEN_WIDTH - menuText.getGlobalBounds().width) / 2.f,
+        SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f - 100.f);
 
     setTextParameters(tStart, "START", 30, sf::Color::White);
     setTextParameters(tDiff, "DIFFICULTY", 30, sf::Color::White);
@@ -392,11 +392,11 @@ void UI::StartMenuState()
     setTextParameters(tLeader, "LEADERBOARD", 30, sf::Color::White);
     setTextParameters(tExit, "EXIT", 30, sf::Color::White);
 
-    tStart.setPosition((SCREEN_WIDTH - tStart.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f);
-    tDiff.setPosition((SCREEN_WIDTH - tDiff.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 50.f);
-    tOptions.setPosition((SCREEN_WIDTH - tOptions.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 100.f);
-    tLeader.setPosition((SCREEN_WIDTH - tLeader.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 150.f);
-    tExit.setPosition((SCREEN_WIDTH - tExit.getGlobalBounds().width) / 2.f, SCREEN_HEIGHT / 2.f + 200.f);
+    tStart.setPosition((SETTINGS.SCREEN_WIDTH - tStart.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f);
+    tDiff.setPosition((SETTINGS.SCREEN_WIDTH - tDiff.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 50.f);
+    tOptions.setPosition((SETTINGS.SCREEN_WIDTH - tOptions.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 100.f);
+    tLeader.setPosition((SETTINGS.SCREEN_WIDTH - tLeader.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 150.f);
+    tExit.setPosition((SETTINGS.SCREEN_WIDTH - tExit.getGlobalBounds().width) / 2.f, SETTINGS.SETTINGS.SCREEN_HEIGHT / 2.f + 200.f);
 
     menuItems.push_back({ tStart, MenuItem::Start });
     menuItems.push_back({ tDiff, MenuItem::Diffucult });
@@ -503,12 +503,12 @@ void UI::GameOVERUI(Game& game)
 
     sf::FloatRect textRect = gameOverText.getLocalBounds();
     gameOverText.setOrigin(textRect.left + textRect.width / 2.f, textRect.top + textRect.height / 2.f);
-    gameOverText.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f);
+    gameOverText.setPosition(SETTINGS.SCREEN_WIDTH / 2.f, SETTINGS.SCREEN_HEIGHT / 2.f);
 }
 
 void UI::UpdateGameOverState(Game& game, float deltaTime)
 {
-    if (game.GetGameFinishTime() <= PAUSE_LENGTH)
+    if (game.GetGameFinishTime() <= SETTINGS.PAUSE_LENGTH)
     {
         game.AddGameFinishTime(deltaTime);
         game.SetBackgroundColor(sf::Color::Red);
@@ -571,7 +571,7 @@ void UI::StartWinState(Game& game)
 
     sf::FloatRect textRect = winText.getLocalBounds();
     winText.setOrigin(textRect.left + textRect.width / 2.f, textRect.top + textRect.height / 2.f);
-    winText.setPosition(SCREEN_WIDTH / 2.f, SCREEN_HEIGHT / 2.f);
+    winText.setPosition(SETTINGS.SCREEN_WIDTH / 2.f, SETTINGS.SCREEN_HEIGHT / 2.f);
 
  
 
@@ -580,7 +580,7 @@ void UI::StartWinState(Game& game)
 void UI::UpdateWinState(Game& game, float deltaTime)
 {
 
-    if (game.GetGameFinishTime() <= PAUSE_LENGTH)
+    if (game.GetGameFinishTime() <= SETTINGS.PAUSE_LENGTH)
     {
         game.AddGameFinishTime(deltaTime);
         game.SetBackgroundColor(sf::Color::Green);

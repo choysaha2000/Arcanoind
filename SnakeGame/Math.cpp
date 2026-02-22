@@ -30,11 +30,11 @@ Position2D GetRandomPositionInField()
 {
     Position2D result;
 
-    float minX = PADDLE_HEIGHT + PADDLE_HEIGHT;
-    float maxX = PADDLE_HEIGHT - PADDLE_HEIGHT;
+    float minX = SETTINGS.PADDLE_HEIGHT + SETTINGS.PADDLE_HEIGHT;
+    float maxX = SETTINGS.PADDLE_HEIGHT - SETTINGS.PADDLE_HEIGHT;
 
-    float minY = PADDLE_HEIGHT + PADDLE_HEIGHT;
-    float maxY = PADDLE_HEIGHT - PADDLE_HEIGHT;
+    float minY = SETTINGS.PADDLE_HEIGHT + SETTINGS.PADDLE_HEIGHT;
+    float maxY = SETTINGS.PADDLE_HEIGHT - SETTINGS.PADDLE_HEIGHT;
 
     result.x = minX + (rand() / (float)RAND_MAX) * (maxX - minX);
     result.y = minY + (rand() / (float)RAND_MAX) * (maxY - minY);

@@ -5,7 +5,7 @@
 
 
 Application::Application()
-    : window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "ARCANOID")
+    : window(sf::VideoMode(SETTINGS.SCREEN_WIDTH, SETTINGS.SCREEN_HEIGHT), "ARCANOID")
 {
     int seed = (int)time(nullptr);
     srand(seed);
